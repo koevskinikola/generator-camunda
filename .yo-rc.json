@@ -1,0 +1,9 @@
+{
+  "generator-node": {
+    "promptValues": {
+      "authorName": "Nikola Koevski",
+      "authorEmail": "koevskin@gmail.com",
+      "authorUrl": "https://github.com/koevskinikola"
+    }
+  }
+}
