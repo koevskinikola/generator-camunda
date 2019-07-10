@@ -1,0 +1,127 @@
+{
+  "applicationServers": {
+    "Apache Tomcat": {
+      "versions": [
+        "7.0.94",
+        "8.0.9",
+        "9.0.22"
+      ],
+      "link": "https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.22/bin/apache-tomcat-9.0.22.zip"
+    },
+    "Wildfly Application Server": {
+      "versions": [
+        "8.2.1",
+        "10.1.0",
+        "11.0.0",
+        "12.0.0",
+        "13.0.0",
+        "14.0.1",
+        "15.0.1",
+        "16.0.0"
+      ],
+      "link": "https://download.jboss.org/wildfly/16.0.0.Final/wildfly-16.0.0.Final.zip"
+    },
+    "JBoss Application Server": {
+      "versions": [
+        "7.2"
+      ],
+      "link": "https://github.com/jbossas/jboss-as/releases/tag/7.2.0.Final-testsuite-fix"
+    },
+    "IBM WebSphere Application Server": {
+      "versions": [
+        "8.5",
+        "9.0"
+      ],
+      "link": null
+    },
+    "Oracle WebLogic Server 12c": {
+      "versions": [
+        "12R1",
+        "12R2"
+      ],
+      "link": null
+    }
+  },
+  "databases": {
+    "H2": {
+      "versions": ["1.4"],
+      "defaultDbName": "process-engine",
+      "defaultPort": "9999",
+      "dbString": "jdbc:h2:./camunda-h2-dbs/%s;MVCC=TRUE;TRACE_LEVEL_FILE=0;DB_CLOSE_ON_EXIT=FALSE",
+      "jdbcLink": "http://www.h2database.com/h2-%s.zip",
+      "jdbcClass": "org.h2.jdbcx.JdbcDataSource",
+      "jdk8": "2019-03-13",
+      "jdk7": "2019-03-13"
+    },
+    "MySQL": {
+      "versions": ["5.6", "5.7"],
+      "defaultDbName": "process-engine",
+      "defaultPort": "3306",
+      "dbString": "jdbc:mysql://%s:%s/%s",
+      "jdbcLink": "https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-%s.zip",
+      "jdbcClass": "com.mysql.jdbc.Driver",
+      "archiveType": "zip",
+      "jdk8": "8.0.16",
+      "jdk7": "5.1.47"
+    },
+    "MariaDB": {
+      "versions": ["10.0", "10.2", "10.3"],
+      "defaultDbName": "process-engine",
+      "defaultPort": "3306",
+      "dbString": "jdbc:mariadb://%s:%s/%s",
+      "jdbcLink": "https://downloads.mariadb.com/Connectors/java/connector-java-%s/mariadb-java-client-%s.jar",
+      "jdbcClass": "org.mariadb.jdbc.Driver",
+      "archiveType": "jar",
+      "jdk8": "2.4.2",
+      "jdk7": "1.8.0"
+    },
+    "PostgreSQL": {
+      "versions": ["9.1", "9.3", "9.4", "9.6", "10.4", "10.7", "11.1", "11.2"],
+      "defaultDbName": "process-engine",
+      "defaultPort": "5432",
+      "dbString": "jdbc:postgresql://%s:%s/%s",
+      "jdbcLink": "https://jdbc.postgresql.org/download/postgresql-%s.jar",
+      "jdbcClass": "org.postgresql.Driver",
+      "archiveType": "jar",
+      "jdk8": "42.2.6",
+      "jdk7": "42.2.6.jre7"
+    },
+    "Microsoft SQL Server": {
+      "versions": ["2008 R2", "2012", "2014", "2016", "2017"],
+      "defaultDbName": "processEngine",
+      "defaultPort": "1433",
+      "dbString": "jdbc:sqlserver://%s:%s;databaseName=%s",
+      "jdbcClass": "com.microsoft.sqlserver.jdbc.SQLServerXADataSource",
+      "jdbcLink": "https://github.com/microsoft/mssql-jdbc/releases/download/v%s/mssql-jdbc-%s.jar",
+      "archiveType": "jar",
+      "jdk8": "7.2.2.jre8",
+      "jdk7": "6.2.2.jre7"
+    },
+    "Oracle": {
+      "versions": ["10g", "11g", "12c", "18c"],
+      "defaultDbName": "processEngine",
+      "defaultPort": "1521",
+      "dbString": "",
+      "jdbcLink": "",
+      "jdbcClass": ""
+    },
+    "IBM DB2": {
+      "versions": ["9.7", "10.1", "10.5", "11.1"],
+      "defaultPort": "50000",
+      "dbString": "jdbc:db2://{address}:{port}/engine",
+      "jdbcLink": "",
+      "jdbcClass": "",
+      "archiveType": "jar",
+      "jdk8": "",
+      "jdk7": ""
+    }
+  },
+  "jdkVersions": [
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ]
+}
