@@ -58,23 +58,6 @@ module.exports = class extends Generator {
     });
   }
 
-  pickJdkVersion() {
-
-    const prompts = [
-      {
-        type: 'list',
-        name: 'jdkVersion',
-        message: 'What version of Java are you using?',
-        choices: supportedEnvironments.jdkVersions,
-        default: supportedEnvironments.jdkVersions.length - 1
-      }
-    ];
-
-    return this.prompt(prompts).then(props => {
-      this.jdkVersion = props.jdkVersion;
-    });
-  }
-
   pickDatabase_name() {
 
     const prompts = [
@@ -159,15 +142,44 @@ module.exports = class extends Generator {
       this.database.version = props.databaseVersion;
       this.database.address = props.databaseAddress;
       this.database.port = props.databasePort;
-      this.database.name = props.databaseName;
+      this.database.dbName = props.databaseName;
       this.database.user = props.databaseUser;
       this.database.password = props.databasePassword;
     });
   }
 
+  pickJdkVersion() {
+
+    const prompts = [
+      {
+        type: 'list',
+        name: 'jdkVersion',
+        message: 'What version of Java are you using?',
+        choices: supportedEnvironments.jdkVersions,
+        default: supportedEnvironments.jdkVersions.length - 1
+      }
+    ];
+
+    return this.prompt(prompts).then(props => {
+      this.jdkVersion = props.jdkVersion;
+
+      if (this.database.name == "PostgreSQL" && props.jdkVersion == 7) {
+        this.database.jdbcVersion = this.database.jdbcVersion + "jre7"
+      }
+
+      if (this.database.name == "Microsoft SQL Server") {
+        var jre = (props.jdkVersion > 7)? 8 : 7;
+        this.database.jdbcVersion = this.database.jdbcVersion + jre;
+      }
+
+      // TODO: OJDBC compatiility matrix
+    });
+  }
+
   downloadAndExtranctApplicationServer() {
     this.log("Downloading the application server!");
-    remote.extract(this.applicationServer.link, ".", function() {});
+    var asLink = sprintf(this.applicationServer.link, this.applicationServer.version, this.applicationServer.version);
+    remote.extract(asLink, ".", {strip: 1}, function() {});
   }
 
   addConfigFile() {
@@ -182,15 +194,12 @@ module.exports = class extends Generator {
 
   addDbDriver() {
 
-    var jdbcLink = sprintf(this.database.jdbcLink, this.database.jdk8);
-    var jdbcUri = sprintf(this.database.dbString, this.database.address, this.database.port, this.database.name,)
-
-    this.log("JDBC Link: " + jdbcLink);
-    this.log("JDBC string: " + jdbcUri);
+    var jdbcLink = sprintf(this.database.jdbcLink, this.database.jdbcVersion, this.database.jdbcVersion);
+    var jdbcUri = sprintf(this.database.dbString, this.database.address, this.database.port, this.database.dbName,)
 
     if (this.applicationServer.name == "Apache Tomcat") {
       // TODO: add custom folder name
-      remote.fetch(jdbcLink, this.destinationPath("apache-tomcat-9.0.22/lib/"), function() {})
+      remote.fetch(jdbcLink, this.destinationPath("apache-tomcat-9.0.22" + "/" + this.applicationServer.libsPath), function() {})
     }
   }
 };
