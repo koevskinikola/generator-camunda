@@ -1,12 +1,23 @@
 'use strict';
 const Generator = require('yeoman-generator');
+const remote = require('yeoman-remote');
+const path = require('path');
 const chalk = require('chalk');
 const yosay = require('yosay');
+const sprintf = require('sprintf-js').sprintf;
+const supportedEnvironments = require('./config/supportedEnvironments.json');
 
 module.exports = class extends Generator {
 
+  constructor(args, opts) {
+    super(args, opts);
+
+    this.applicationServers = supportedEnvironments.applicationServers;
+    this.databases = supportedEnvironments.databases;
+    this.jdkVersions = supportedEnvironments.jdkVersions;
+  }
+
   welcomeUser() {
-    // Have Yeoman greet the user.
     this.log(
       yosay(`Welcome to the ${chalk.red('Camunda BPM Platform')} generator!`)
     );
@@ -19,62 +30,48 @@ module.exports = class extends Generator {
         type: 'list',
         name: 'applicationServer',
         message: 'What application server would you like to use?',
-        choices: ['Apache Tomcat', 'Wildfly Application Server', 'JBoss Application Server', 'IBM WebSphere Application Server', 'Oracle WebLogic Server 12c (12R1,12R2)'],
+        choices: Object.keys(this.applicationServers),
         default: 0
       }
     ];
 
     return this.prompt(prompts).then(props => {
-      // To access props later use this.props.applicationServer;
-      this.props = props;
+      this.applicationServer = this.applicationServers[props.applicationServer];
+      this.applicationServer.name = props.applicationServer;
     });
   }
 
   pickApplicationServer_version() {
-
-    var applicationServerVersions = {
-      "Apache Tomcat": ["7.0", "8.0", "9.0"],
-      "Wildfly Application Server": ["8.2", "10.1", "11.0", "12.0", "13.0", "14.0", "15.0", "16.0"],
-      "JBoss Application Server": ["7.2"],
-      "IBM WebSphere Application Server": ["8.5", "9.0"],
-      "Oracle WebLogic Server 12c": ["12R1", "12R2"]
-    }
-
-    var versions = applicationServerVersions[this.props.applicationServer];
 
     const prompts = [
       {
         type: 'list',
         name: 'applicationServerVersion',
         message: 'What application server version would you like to use?',
-        choices: versions,
-        default: versions.length - 1
+        choices: this.applicationServer.versions,
+        default: this.applicationServer.versions.length - 1
       }
     ];
 
     return this.prompt(prompts).then(props => {
-      // To access props later use this.props.applicationServerVersion;
-      this.props = props;
+      this.applicationServer.version = props.applicationServerVersion;
     });
   }
 
   pickJdkVersion() {
-
-    var jdkVersions = [7, 8, 9, 10, 11, 12]
 
     const prompts = [
       {
         type: 'list',
         name: 'jdkVersion',
         message: 'What version of Java are you using?',
-        choices: jdkVersions,
-        default: jdkVersions.length - 1
+        choices: supportedEnvironments.jdkVersions,
+        default: supportedEnvironments.jdkVersions.length - 1
       }
     ];
 
     return this.prompt(prompts).then(props => {
-      // To access props later use this.props.jdkVersion;
-      this.props = props;
+      this.jdkVersion = props.jdkVersion;
     });
   }
 
@@ -85,49 +82,26 @@ module.exports = class extends Generator {
         type: 'list',
         name: 'database',
         message: 'What database would you like to use?',
-        choices: ['H2', 'MySQL', 'MariaDB', 'PostgreSQL', 'Microsoft SQL Server', 'Oracle', 'IBM DB2'],
+        choices: Object.keys(supportedEnvironments.databases),
         default: 0
       }
     ];
 
     return this.prompt(prompts).then(props => {
-      // To access props later use this.props.database;
-      this.props = props;
+      this.database = this.databases[props.database];
+      this.database.name = props.database;
     });
   }
 
   pickDatabase_version() {
-
-    var databaseVersions = {
-      "H2": ["1.4"],
-      "MySQL": ["5.6", "5.7"],
-      "MariaDB": ["10.0", "10.2", "10.3"],
-      "PostgreSQL": ["9.1", "9.3", "9.4", "9.6", "10.4", "10.7", "11.1", "11.2"],
-      "Microsoft SQL Server": ["2008 R2", "2012", "2014", "2016", "2017"],
-      "Oracle": ["10g", "11g", "12c", "18c"],
-      "IBM DB2": ["9.7", "10.1", "10.5", "11.1"],
-    }
-
-    var databasePorts = {
-      "H2": "9999",
-      "MySQL": "3306",
-      "MariaDB": "3306",
-      "PostgreSQL": "5432",
-      "Microsoft SQL Server": "1433",
-      "Oracle": "1521",
-      "IBM DB2": "50000",
-    };
-
-    var versions = databaseVersions[this.props.database];
-    var defaultPort = databasePorts[this.props.database];
 
     const prompts = [
       {
         type: 'list',
         name: 'databaseVersion',
         message: 'What database version would you like to use?',
-        choices: versions,
-        default: versions.length - 1
+        choices: this.database.versions,
+        default: this.database.versions.length - 1
       },
       {
         type: 'input',
@@ -149,7 +123,7 @@ module.exports = class extends Generator {
         type: 'input',
         name: 'databasePort',
         message: 'Enter your database port?',
-        default: defaultPort,
+        default: this.database.defaultPort,
         validate: function(value) {
           var pass = value.match(
             /^([0-9]{1,5})$/i
@@ -163,46 +137,60 @@ module.exports = class extends Generator {
       },
       {
         type: 'input',
+        name: 'databaseName',
+        message: 'Please enter your database name:',
+        default: this.database.defaultDbName
+      },
+      {
+        type: 'input',
         name: 'databaseUser',
         message: 'Please enter your database user:',
         default: "camunda"
       },
-     {
-       type: 'password',
-       message: 'Please enter your database password:',
-       name: 'databasePassword',
-       mask: '*'
-     }
+      {
+        type: 'password',
+        message: 'Please enter your database password:',
+        name: 'databasePassword',
+        mask: '*'
+      }
     ];
 
     return this.prompt(prompts).then(props => {
-      // To access props later use this.props.databaseVersion;
-      this.props = props;
+      this.database.version = props.databaseVersion;
+      this.database.address = props.databaseAddress;
+      this.database.port = props.databasePort;
+      this.database.name = props.databaseName;
+      this.database.user = props.databaseUser;
+      this.database.password = props.databasePassword;
     });
   }
 
-  enterDatabase_info() {
-
-
-
-    const prompts = [
-
-    ];
-
-    return this.prompt(prompts).then(props => {
-      // To access props later use this.props.databaseVersion;
-      this.props = props;
-    });
+  downloadAndExtranctApplicationServer() {
+    this.log("Downloading the application server!");
+    remote.extract(this.applicationServer.link, ".", function() {});
   }
 
-  writing() {
-    this.fs.copy(
-      this.templatePath('dummyfile.txt'),
-      this.destinationPath('dummyfile.txt')
-    );
+  addConfigFile() {
+    if (this.applicationServer.name == "Apache Tomcat") {
+      // TODO: add custom folder name
+      this.fs.copy(
+        this.templatePath('tomcat/bpm-platform.xml'),
+        this.destinationPath('apache-tomcat-9.0.22/conf/bpm-platform.txt')
+      );
+    }
   }
 
-  install() {
-//    this.installDependencies();
+  addDbDriver() {
+
+    var jdbcLink = sprintf(this.database.jdbcLink, this.database.jdk8);
+    var jdbcUri = sprintf(this.database.dbString, this.database.address, this.database.port, this.database.name,)
+
+    this.log("JDBC Link: " + jdbcLink);
+    this.log("JDBC string: " + jdbcUri);
+
+    if (this.applicationServer.name == "Apache Tomcat") {
+      // TODO: add custom folder name
+      remote.fetch(jdbcLink, this.destinationPath("apache-tomcat-9.0.22/lib/"), function() {})
+    }
   }
 };

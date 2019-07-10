@@ -37,8 +37,10 @@
   },
   "dependencies": {
     "yeoman-generator": "^2.0.1",
+    "yeoman-remote": "^1.0.1",
     "chalk": "^2.1.0",
-    "yosay": "^2.0.1"
+    "yosay": "^2.0.1",
+    "sprintf-js": "^1.1.2"
   },
   "jest": {
     "testEnvironment": "node"
