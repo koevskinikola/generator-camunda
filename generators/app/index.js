@@ -1,10 +1,10 @@
 'use strict';
 const Generator = require('yeoman-generator');
-// TODO: switch to recommended NPM Download package (https://www.npmjs.com/package/download)
-const remote = require('yeoman-remote');
+const remote = require('download');
 const path = require('path');
 const chalk = require('chalk');
 const yosay = require('yosay');
+const convert = require("xml-js");
 const sprintf = require('sprintf-js').sprintf;
 const supportedEnvironments = require('./config/supportedEnvironments.json');
 
@@ -58,6 +58,23 @@ module.exports = class extends Generator {
       this.applicationServer.version = props.applicationServerVersion;
     });
   }
+
+  pickJdkVersion() {
+
+      const prompts = [
+        {
+          type: 'list',
+          name: 'jdkVersion',
+          message: 'What version of Java are you using?',
+          choices: supportedEnvironments.jdkVersions,
+          default: supportedEnvironments.jdkVersions.length - 1
+        }
+      ];
+
+      return this.prompt(prompts).then(props => {
+        this.jdkVersion = props.jdkVersion;
+      });
+    }
 
   pickDatabase_name() {
 
@@ -146,23 +163,6 @@ module.exports = class extends Generator {
       this.database.dbName = props.databaseName;
       this.database.user = props.databaseUser;
       this.database.password = props.databasePassword;
-    });
-  }
-
-  pickJdkVersion() {
-
-    const prompts = [
-      {
-        type: 'list',
-        name: 'jdkVersion',
-        message: 'What version of Java are you using?',
-        choices: supportedEnvironments.jdkVersions,
-        default: supportedEnvironments.jdkVersions.length - 1
-      }
-    ];
-
-    return this.prompt(prompts).then(props => {
-      this.jdkVersion = props.jdkVersion;
 
       // deal with PostgreSQL JDK7 compatibility
       if (this.database.name == "PostgreSQL" && props.jdkVersion == 7) {
@@ -176,23 +176,68 @@ module.exports = class extends Generator {
       }
 
       // TODO: deal with OJDBC compatiility matrix
+
+      this.database.jdbcLink = sprintf(this.database.jdbcLink, this.database.jdbcVersion, this.database.jdbcVersion);
+      this.database.jdbcUrl = sprintf(this.database.dbString, this.database.address, this.database.port, this.database.dbName);
+      if (this.database.name === 'H2') {
+        this.database.jdbcUrl = sprintf(this.database.dbString, this.database.dbName);
+      }
     });
   }
 
   downloadAndExtranctApplicationServer() {
     this.log("Downloading the application server!");
     var asLink = sprintf(this.applicationServer.link, this.applicationServer.version, this.applicationServer.version);
-    remote.extract(asLink, this.destinationPath("./" + this.applicationServer.shortName), {strip: 1}, function() {});
+    remote(asLink, ".", {extract: true, strip: 1}).then(() => {
+
+      var serverXml = this.fs.read('./conf/server.xml');
+      var serverJson = convert.xml2js(serverXml, {compact: false, spaces: 2});
+
+      this.fs.copyTpl(
+        this.templatePath('tomcat/server.xml'),
+        this.destinationPath("./camServer.xml"),
+        { db: {
+            url: this.database.jdbcUrl,
+            jdbcClass: this.database.jdbcClass,
+            user: this.database.user,
+            password: this.database.password
+          }
+        }
+      );
+      var camServer = this.fs.read('./camServer.xml')
+      var camJson = convert.xml2js(camServer, {compact: false, spaces: 2});
+      var resources = camJson.elements[0].elements;
+
+      var newXml = convert.js2xml(
+        serverJson,
+        {
+          compact: false,
+          spaces: 2,
+          elementNameFn: function(value, currentElement) {
+            if (value == 'GlobalNamingResources') {
+              var serverArr = currentElement.elements.concat(resources);
+              currentElement.elements = serverArr;
+            }
+            return value;
+          }
+        }
+      );
+
+      this.fs.delete('./conf/server.xml', {suppressErrors: true});
+      this.fs.delete('./camServer.xml', {suppressErrors: true});
+      this.fs.write('./conf/server.xml', newXml);
+    });
   }
 
   addConfigFile() {
     // TODO: add custom folder name
-    var rootFolder = this.applicationServer.shortName + "/";
+//    var rootFolder = this.applicationServer.shortName + "/";
+    var rootFolder = "./";
     switch (this.applicationServer.shortName) {
       case "tomcat":
         this.fs.copy(
           this.templatePath('tomcat/bpm-platform.xml'),
-          this.destinationPath(rootFolder + '/conf/bpm-platform.txt')
+          this.destinationPath(rootFolder + 'conf/bpm-platform.xml')
         );
       case "wildfly":
         // TODO: modify standalone.xml
@@ -200,37 +245,68 @@ module.exports = class extends Generator {
     }
   }
 
-  addDbDriver() {
-
-    var jdbcLink = sprintf(this.database.jdbcLink, this.database.jdbcVersion, this.database.jdbcVersion);
-    var jdbcUri = sprintf(this.database.dbString, this.database.address, this.database.port, this.database.dbName,)
-
+  addDbDriver(obj) {
     // TODO: add custom folder name
-    var rootFolder = this.applicationServer.shortName + "/";
+//    var rootFolder = this.applicationServer.shortName + "/";
+    var rootFolder = "./";
     switch (this.applicationServer.shortName) {
       case "tomcat":
-        remote.fetch(
-          jdbcLink,
-          this.destinationPath(rootFolder + "/" + this.applicationServer.libsPath),
-          function() {}
+        remote(
+          this.database.jdbcLink,
+          rootFolder + this.applicationServer.libsPath
         );
         // TODO: modify server.xml
         break;
       case "wildfly":
-        remote.fetch(
-          jdbcLink,
-          this.destinationPath(rootFolder + this.applicationServer.libsPath + this.database.jbossPath),
-          function() {}
-        );
-        var jarName = jdbcLink.slice(jdbcLink.lastIndexOf('/') + 1);
-        this.fs.copy(
-          this.templatePath('wildfly/module.xml'),
+        remote(
+          this.database.jdbcLink,
           this.destinationPath(rootFolder + this.applicationServer.libsPath + this.database.jbossPath)
+        );
+        var jarName = this.database.jdbcLink.slice(jdbcLink.lastIndexOf('/') + 1);
+        this.fs.copyTpl(
+          this.templatePath('wildfly/module.xml'),
+          this.destinationPath(rootFolder + this.applicationServer.libsPath + this.database.jbossPath + "module.xml"),
+          { jdbcJar: jarName, jdbcModule: this.database.jbossModule }
         );
         // TODO: modify standalone.xml
         break;
       default:
         break;
     }
+  }
+
+  addCamundaLibs() {
+    var rootFolder = "./";
+    var self = this;
+    remote(
+      "https://app.camunda.com/nexus/repository/camunda-bpm/org/camunda/bpm/tomcat/camunda-tomcat-assembly/7.10.0/camunda-tomcat-assembly-7.10.0.tar.gz",
+      this.destinationPath(rootFolder + this.applicationServer.libsPath),
+      {
+        extract: true,
+//        strip: 1,
+        filter: file => {
+          return !path.dirname(file.path).includes('server/apache') && path.dirname(file.path).includes('lib');
+        }
+      }
+    ).then(files => {
+      self.fs.move("./lib/lib/**", self.destinationPath(rootFolder + self.applicationServer.libsPath));
+      self.fs.delete("./lib/lib/");
+    });
+  }
+
+  addCamundaComponents() {
+    var rootFolder = "./";
+    remote(
+      "https://app.camunda.com/nexus/repository/public/org/camunda/bpm/webapp/camunda-webapp-tomcat/7.10.0/camunda-webapp-tomcat-7.10.0.war",
+      this.destinationPath(rootFolder + "webapps/")
+    );
+    remote(
+      "https://app.camunda.com/nexus/repository/public/org/camunda/bpm/camunda-engine-rest/7.10.0/camunda-engine-rest-7.10.0-tomcat.war",
+      this.destinationPath(rootFolder + "webapps/")
+    );
+    remote(
+      "https://app.camunda.com/nexus/repository/camunda-bpm/org/camunda/bpm/example/camunda-example-invoice/7.10.0/camunda-example-invoice-7.10.0.war",
+      this.destinationPath(rootFolder + "webapps/")
+    );
   }
 };

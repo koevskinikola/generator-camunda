@@ -58,7 +58,7 @@
       "dbString": "jdbc:h2:./camunda-h2-dbs/%s;MVCC=TRUE;TRACE_LEVEL_FILE=0;DB_CLOSE_ON_EXIT=FALSE",
       "jdbcLink": "https://repo1.maven.org/maven2/com/h2database/h2/%s/h2-%s.jar",
       "jdbcVersion": "1.4.190",
-      "jdbcClass": "org.h2.jdbcx.JdbcDataSource",
+      "jdbcClass": "org.h2.Driver",
       "jbossModule": "com.h2database",
       "jbossPath": "com/h2database/main/"
     },

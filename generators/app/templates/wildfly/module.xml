@@ -22,10 +22,10 @@
   ~ 02110-1301 USA, or see the FSF site: http://www.fsf.org.
   -->
 
-<module xmlns="urn:jboss:module:1.3" name="{jdbc-path}">
+<module xmlns="urn:jboss:module:1.3" name="<%= jdbcModule %>">
 
   <resources>
-    <resource-root path="{jdbc-name}"/>
+    <resource-root path="<%= jdbcJar %>"/>
   </resources>
   <dependencies>
     <module name="javax.api"/>
