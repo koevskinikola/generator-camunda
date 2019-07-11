@@ -1,5 +1,6 @@
 'use strict';
 const Generator = require('yeoman-generator');
+// TODO: switch to recommended NPM Download package (https://www.npmjs.com/package/download)
 const remote = require('yeoman-remote');
 const path = require('path');
 const chalk = require('chalk');
@@ -163,32 +164,39 @@ module.exports = class extends Generator {
     return this.prompt(prompts).then(props => {
       this.jdkVersion = props.jdkVersion;
 
+      // deal with PostgreSQL JDK7 compatibility
       if (this.database.name == "PostgreSQL" && props.jdkVersion == 7) {
         this.database.jdbcVersion = this.database.jdbcVersion + "jre7"
       }
 
+      // deal with SqlServer JDK compatibility
       if (this.database.name == "Microsoft SQL Server") {
         var jre = (props.jdkVersion > 7)? 8 : 7;
         this.database.jdbcVersion = this.database.jdbcVersion + jre;
       }
 
-      // TODO: OJDBC compatiility matrix
+      // TODO: deal with OJDBC compatiility matrix
     });
   }
 
   downloadAndExtranctApplicationServer() {
     this.log("Downloading the application server!");
     var asLink = sprintf(this.applicationServer.link, this.applicationServer.version, this.applicationServer.version);
-    remote.extract(asLink, ".", {strip: 1}, function() {});
+    remote.extract(asLink, this.destinationPath("./" + this.applicationServer.shortName), {strip: 1}, function() {});
   }
 
   addConfigFile() {
-    if (this.applicationServer.name == "Apache Tomcat") {
-      // TODO: add custom folder name
-      this.fs.copy(
-        this.templatePath('tomcat/bpm-platform.xml'),
-        this.destinationPath('apache-tomcat-9.0.22/conf/bpm-platform.txt')
-      );
+    // TODO: add custom folder name
+    var rootFolder = this.applicationServer.shortName + "/";
+    switch (this.applicationServer.shortName) {
+      case "tomcat":
+        this.fs.copy(
+          this.templatePath('tomcat/bpm-platform.xml'),
+          this.destinationPath(rootFolder + '/conf/bpm-platform.txt')
+        );
+      case "wildfly":
+        // TODO: modify standalone.xml
+      case "jboss":
     }
   }
 
@@ -197,9 +205,32 @@ module.exports = class extends Generator {
     var jdbcLink = sprintf(this.database.jdbcLink, this.database.jdbcVersion, this.database.jdbcVersion);
     var jdbcUri = sprintf(this.database.dbString, this.database.address, this.database.port, this.database.dbName,)
 
-    if (this.applicationServer.name == "Apache Tomcat") {
-      // TODO: add custom folder name
-      remote.fetch(jdbcLink, this.destinationPath("apache-tomcat-9.0.22" + "/" + this.applicationServer.libsPath), function() {})
+    // TODO: add custom folder name
+    var rootFolder = this.applicationServer.shortName + "/";
+    switch (this.applicationServer.shortName) {
+      case "tomcat":
+        remote.fetch(
+          jdbcLink,
+          this.destinationPath(rootFolder + "/" + this.applicationServer.libsPath),
+          function() {}
+        );
+        // TODO: modify server.xml
+        break;
+      case "wildfly":
+        remote.fetch(
+          jdbcLink,
+          this.destinationPath(rootFolder + this.applicationServer.libsPath + this.database.jbossPath),
+          function() {}
+        );
+        var jarName = jdbcLink.slice(jdbcLink.lastIndexOf('/') + 1);
+        this.fs.copy(
+          this.templatePath('wildfly/module.xml'),
+          this.destinationPath(rootFolder + this.applicationServer.libsPath + this.database.jbossPath)
+        );
+        // TODO: modify standalone.xml
+        break;
+      default:
+        break;
     }
   }
 };

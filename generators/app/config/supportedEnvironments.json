@@ -57,9 +57,10 @@
       "defaultPort": "9999",
       "dbString": "jdbc:h2:./camunda-h2-dbs/%s;MVCC=TRUE;TRACE_LEVEL_FILE=0;DB_CLOSE_ON_EXIT=FALSE",
       "jdbcLink": "https://repo1.maven.org/maven2/com/h2database/h2/%s/h2-%s.jar",
-      "jdbcClass": "org.h2.jdbcx.JdbcDataSource",
       "jdbcVersion": "1.4.190",
-      "jbossPath": "com/h2database/"
+      "jdbcClass": "org.h2.jdbcx.JdbcDataSource",
+      "jbossModule": "com.h2database",
+      "jbossPath": "com/h2database/main/"
     },
     "MySQL": {
       "versions": ["5.6", "5.7"],
@@ -67,9 +68,10 @@
       "defaultPort": "3306",
       "dbString": "jdbc:mysql://%s:%s/%s",
       "jdbcLink": "https://repo1.maven.org/maven2/mysql/mysql-connector-java/%s/mysql-connector-java-%s.jar",
-      "jdbcClass": "com.mysql.jdbc.jdbc2.optional.MysqlXADataSource",
       "jdbcVersion": "5.1.47",
-      "jbossPath": "com/mysql/jdbc/"
+      "jdbcClass": "com.mysql.jdbc.jdbc2.optional.MysqlXADataSource",
+      "jbossModule": "com.mysql.jdbc",
+      "jbossPath": "com/mysql/jdbc/main/"
     },
     "MariaDB": {
       "versions": ["10.0", "10.2", "10.3"],
@@ -77,9 +79,10 @@
       "defaultPort": "3306",
       "dbString": "jdbc:mariadb://%s:%s/%s",
       "jdbcLink": "https://repo1.maven.org/maven2/org/mariadb/jdbc/mariadb-java-client/%s/mariadb-java-client-%s.jar",
-      "jdbcClass": "org.mariadb.jdbc.MySQLDataSource",
       "jdbcVersion": "1.8.0",
-      "jbossPath": "org/mariadb/jdbc"
+      "jdbcClass": "org.mariadb.jdbc.MySQLDataSource",
+      "jbossModule": "org.mariadb.jdbc",
+      "jbossPath": "org/mariadb/jdbc/main/"
     },
     "PostgreSQL": {
       "versions": ["9.1", "9.3", "9.4", "9.6", "10.4", "10.7", "11.1", "11.2"],
@@ -87,19 +90,21 @@
       "defaultPort": "5432",
       "dbString": "jdbc:postgresql://%s:%s/%s",
       "jdbcLink": "https://repo1.maven.org/maven2/org/postgresql/postgresql/%s/postgresql-%s.jar",
-      "jdbcClass": "org.postgresql.Driver",
       "jdbcVersion": "42.2.6",
-      "jbossPath": "org/postgresql/"
+      "jdbcClass": "org.postgresql.Driver",
+      "jbossModule": "org.postgresql",
+      "jbossPath": "org/postgresql/main/"
     },
     "Microsoft SQL Server": {
       "versions": ["2008 R2", "2012", "2014", "2016", "2017"],
       "defaultDbName": "processEngine",
       "defaultPort": "1433",
       "dbString": "jdbc:sqlserver://%s:%s;databaseName=%s",
-      "jdbcClass": "com.microsoft.sqlserver.jdbc.SQLServerXADataSource",
       "jdbcLink": "https://repo1.maven.org/maven2/com/microsoft/sqlserver/mssql-jdbc/%s/mssql-jdbc-%s.jar",
       "jdbcVersion": "6.2.2.jre",
-      "jbossPath": "com/microsoft/sqlserver/jdbc/"
+      "jdbcClass": "com.microsoft.sqlserver.jdbc.SQLServerXADataSource",
+      "jbossModule": "com.microsoft.sqlserver.jdbc",
+      "jbossPath": "com/microsoft/sqlserver/jdbc/main/"
     },
     "Oracle": {
       "versions": ["10g", "11g", "12c", "18c"],
@@ -107,9 +112,10 @@
       "defaultPort": "1521",
       "dbString": "jdbc:oracle://@%s:%s/%s",
       "jdbcLink": "https://maven.xwiki.org/externals/com/oracle/jdbc/ojdbc%s/%s/ojdbc%s-%s.jar",
-      "jdbcClass": "oracle.jdbc.datasource.OracleXADataSource",
       "jdbcVersion": "12.2.0.1",
-      "jbossPath": "oracle/jdbc/"
+      "jdbcClass": "oracle.jdbc.xa.OracleXADataSource",
+      "jbossModule": "oracle.jdbc",
+      "jbossPath": "oracle/jdbc/main/"
 
     },
     "IBM DB2": {
@@ -117,9 +123,10 @@
       "defaultPort": "50000",
       "dbString": "jdbc:db2://%s:%s/%s",
       "jdbcLink": "https://repo1.maven.org/maven2/com/ibm/db2/jcc/%s/jcc-%s.jar",
-      "jdbcClass": "com.ibm.db2.jcc.DB2XADataSource",
       "jdbcVersion": "11.1.4.4",
-      "jbossPath": "com/ibm/db2/jcc/"
+      "jdbcClass": "com.ibm.db2.jcc.DB2XADataSource",
+      "jbossModule": "com.ibm.db2.jcc",
+      "jbossPath": "com/ibm/db2/jcc/main/"
     }
   },
   "jdkVersions": [
